@@ -55,7 +55,9 @@ Problem:
   obtain the word in Spanish
 
 Solution: We use Watir
-- Install: gem install watir-webdriver
+- Install: 
+gem install watir-webdriver
+gem install headless
 
 4. The result has to be:
 ab; de, a partir de
