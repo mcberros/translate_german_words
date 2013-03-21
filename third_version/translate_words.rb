@@ -49,7 +49,7 @@ def searchWord( term, browser )
       term.translation=term.translation.push(maybeATarget.text) if maybeATarget.exists? and not term.translation.include?(maybeATarget.text) and not maybeATarget.text.include?('LatAm')
     end
   end
-  term.type = browser.h2.acronym.text if browser.h2s.length == 1 and term.type == Word::TYPE[:other] and Word::TYPE.has_value?(browser.h2.acronym.text) 
+  term.type = browser.h2.element(:tag_name => "acronym").text if browser.h2s.length == 1 and term.type == Word::TYPE[:other] and Word::TYPE.has_value?(browser.h2.element(:tag_name => "acronym").text) 
 end
 
 def saveWords ( words,
@@ -57,7 +57,7 @@ def saveWords ( words,
                 typeTerm='',
                 fileParams={
                   :pathCSVTranslation => '/Users/mcberros/ruby/translate_german_words/third_version/',
-                  :fileNameTranslation => 'GermanWordsTranslation_test',
+                  :fileNameTranslation => 'GermanWordsTranslation',
                   :sufixFile => '.csv'})
   
   if division
@@ -81,7 +81,7 @@ end
 def saveAllWords( words,
                   fileParams={
                     :pathCSVTranslation => '/Users/mcberros/ruby/translate_german_words/third_version/',
-                    :fileNameTranslation => 'GermanWordsTranslation_test',
+                    :fileNameTranslation => 'GermanWordsTranslation',
                     :sufixFile => '.csv'})
   if not words.empty?
     firstTerm=words[0]
@@ -106,7 +106,7 @@ def saveWordsbyType( words,
                      typeTerm,
                      fileParams={
                       :pathCSVTranslation => '/Users/mcberros/ruby/translate_german_words/third_version/',
-                      :fileNameTranslation => 'GermanWordsTranslation_test',
+                      :fileNameTranslation => 'GermanWordsTranslation',
                       :sufixFile => '.csv'})
   
   if Word::TYPE.has_value?(typeTerm) and not words.empty?
@@ -125,7 +125,7 @@ end
 begin
   browser = Watir::Browser.new :firefox
   # Path where is the file with the list of words.
-  pathCSVWord='/Users/mcberros/ruby/translate_german_words/third_version/GermanWords_test.csv'
+  pathCSVWord='/Users/mcberros/ruby/translate_german_words/third_version/GermanWords.csv'
   words=[]
   
   # We obtain from csv file the information, that we will use to search in 
