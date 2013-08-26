@@ -4,7 +4,7 @@ require_relative 'word'
 
 Selenium::WebDriver::Firefox::Binary.path='/Applications/Firefox.app/Contents/MacOS/firefox'
 
-def fillTerm( rowCSV )
+def obtainWordToSearch(rowCSV)
   if not rowCSV[0].nil? and not rowCSV[1].nil?
     arrayFirstColumn = rowCSV[0].split(',')
     if arrayFirstColumn.length >= 1
@@ -125,18 +125,18 @@ end
 begin
   browser = Watir::Browser.new :firefox
   # Path where is the file with the list of words.
-  pathCSVWord='/Users/mcberros/workspace/translate_german_words/GermanWords.csv'
-  words=[]
+  pathCSV_Source = '/Users/mcberros/workspace/translate_german_words/GermanWords.csv'
+  wordsFromCSV_Source = []
   
   # We obtain from csv file the information, that we will use to search in 
   # the dictionary
-  CSV.foreach(pathCSVWord,{:skip_blanks => true}) do |row|
-    term=fillTerm(row)
-    words.push(term) if not term.nil?
+  CSV.foreach(pathCSV_Source, {:skip_blanks => true}) do |rowCSV_Source|
+    wordToSearch = obtainWordToSearch(rowCSV_Source)
+    wordsFromCSV_Source.push(wordToSearch) if not wordToSearch.nil?
   end
   
   # Para cada palabra simplificada buscamos en el diccionario
-  words.each do |term|
+  wordsFromCSV_Source.each do |term|
     searchWord(term, browser)
     puts "#{term.wordSimplified}"
   end
@@ -152,10 +152,10 @@ ensure
   # Los tres campos están separados por ;
 
   #Creamos un fichero por cada tipo
-  saveWords(words,true)
+  saveWords(wordsFromCSV_Source,true)
 
   #Creamos un unico fichero con todas las palabras
-  saveWords(words,false)
+  saveWords(wordsFromCSV_Source,false)
    
 end
 
