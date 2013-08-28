@@ -40,84 +40,50 @@ def obtainWordToSearch(rowCSV)
   return term
 end
 
-def searchWord( term, browser )
-  browser.goto term.url
-  browser.trs(:class => 'kne').each do |tr|
-    maybeAHeadword=tr.td(:class => 'source').strong(:class => 'headword')
-    if maybeAHeadword.exists? and maybeAHeadword.text.strip == term.wordSimplified
-      maybeATarget = tr.td(:class => 'target')
-      term.translation=term.translation.push(maybeATarget.text) if maybeATarget.exists? and not term.translation.include?(maybeATarget.text) and not maybeATarget.text.include?('LatAm')
+def searchWordInDictionary(word, browser)
+  browser.goto word.url
+  browser.trs(class: 'kne').each do |tablerow|
+    maybeAHeadword = tablerow.td(class: 'source').strong(class: 'headword')
+    if maybeAHeadword.exists? and maybeAHeadword.text.strip == word.wordSimplified
+      maybeATarget = tablerow.td(class: 'target')
+      word.translation = word.translation.push(maybeATarget.text) if maybeATarget.exists? and not word.translation.include?(maybeATarget.text) and not maybeATarget.text.include?('LatAm')
     end
   end
-  term.type = browser.h2.element(:tag_name => "acronym").text if browser.h2s.length == 1 and term.type == Word::TYPE[:other] and Word::TYPE.has_value?(browser.h2.element(:tag_name => "acronym").text) 
-end
-
-def saveWords ( words,
-                division=false,
-                typeTerm='',
-                fileParams={
-                  :pathCSVTranslation => '/Users/mcberros/workspace/translate_german_words/',
-                  :fileNameTranslation => 'GermanWordsTranslation',
-                  :sufixFile => '.csv'})
-  
-  if division
-    #Obtener un fichero para cada tipo
-    Word::TYPE.each_value { |type| saveWordsbyType(words, type)}
-  else
-    if typeTerm.empty?
-      # obtener un fichero con todas las palabras
-      saveAllWords(words)
-    else
-      # obtener el fichero de un solo un tipo
-      saveWordsbyType(words, typeTerm)
-    end
-  end
+  word.type = browser.h2.element(tag_name: 'acronym').text if browser.h2s.length == 1 and word.type == Word::TYPE[:other] and Word::TYPE.has_value?(browser.h2.element(tag_name: 'acronym').text) 
 end
 
 def prepCSVRow( term )
   return [term.wordNotSimplified, term.translation.join(','), term.type, term.sentences]
 end
 
-def saveAllWords( words,
-                  fileParams={
-                    :pathCSVTranslation => '/Users/mcberros/workspace/translate_german_words/',
-                    :fileNameTranslation => 'GermanWordsTranslation',
-                    :sufixFile => '.csv'})
-  if not words.empty?
-    firstTerm=words[0]
-    nameFile="#{fileParams[:pathCSVTranslation]}#{fileParams[:fileNameTranslation]}_#{firstTerm.wordSimplified}_all#{fileParams[:sufixFile]}"
-    CSV.open(nameFile, "wb", {:col_sep => ";"}) do |csv|
-      words.each do |term|
-        csv << prepCSVRow(term)  
+def obtainResultFileName(firstTerm, typeWord = 'all', fileParams = {pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv'})
+  fileName = "#{fileParams[:pathCSVTranslation]}#{fileParams[:fileNameTranslation]}_#{firstWord.wordSimplified}_#{typeWord}#{fileParams[:sufixFile]}"
+end
+
+def saveWordsInFile(allWords, splitPerType = true, typeWord = 'all', fileParams = {})
+  if not allWords.empty?
+    if Word::TYPE.has_value?(typeWord)
+      selectedWords = allWords.select { |word| word.type == typeWord}
+      writeWords(selectedWords, typeWord)
+    else if typeWord == 'all'
+      if splitPerType
+
+      ###########Mal
+        Word::TYPE.each_value { |type| saveWordsInFile(allWords, typeWord = type)}
+      else
+        selectedWords = allWords
+        writeWords(selectedWords)
       end
     end
   end
 end
 
-=begin
-  words: Array de palabras sin filtrar
-  typeTerm: Debe haber un tipo obligatoriamente
-  fileParams={
-    :pathCSVTranslation
-    :fileNameTranslation
-    :sufixFile
-=end
-def saveWordsbyType( words,
-                     typeTerm,
-                     fileParams={
-                      :pathCSVTranslation => '/Users/mcberros/workspace/translate_german_words/',
-                      :fileNameTranslation => 'GermanWordsTranslation',
-                      :sufixFile => '.csv'})
-  
-  if Word::TYPE.has_value?(typeTerm) and not words.empty?
-    wordsFiltered=words.select { |word| word.type == typeTerm}
-    if not wordsFiltered.empty?
-      nameFile="#{fileParams[:pathCSVTranslation]}#{fileParams[:fileNameTranslation]}_#{wordsFiltered[0].wordSimplified}_#{typeTerm}#{fileParams[:sufixFile]}"
-      CSV.open(nameFile, "wb", {:col_sep => ";"}) do |csv|
-        wordsFiltered.each do |term|
-          csv << prepCSVRow(term)
-        end
-      end
+def writeWords(words, typeWord='all', fileParams = {})
+  firstWord = words[0]
+  resultFileName = obtainResultFileName(firstWord, typeWord)
+  CSV.open(nameFile, "wb", {:col_sep => ";"}) do |csv|
+    words.each do |term|
+      csv << prepCSVRow(term)  
     end
   end
 end
@@ -130,15 +96,15 @@ begin
   
   # We obtain from csv file the information, that we will use to search in 
   # the dictionary
-  CSV.foreach(pathCSV_Source, {:skip_blanks => true}) do |rowCSV_Source|
+  CSV.foreach(pathCSV_Source, {skip_blanks: true}) do |rowCSV_Source|
     wordToSearch = obtainWordToSearch(rowCSV_Source)
     wordsFromCSV_Source.push(wordToSearch) if not wordToSearch.nil?
   end
   
   # Para cada palabra simplificada buscamos en el diccionario
-  wordsFromCSV_Source.each do |term|
-    searchWord(term, browser)
-    puts "#{term.wordSimplified}"
+  wordsFromCSV_Source.each do |word|
+    searchWordInDictionary(word, browser)
+    puts "#{word.wordSimplified}"
   end
 
 ensure
@@ -152,10 +118,10 @@ ensure
   # Los tres campos están separados por ;
 
   #Creamos un fichero por cada tipo
-  saveWords(wordsFromCSV_Source,true)
+  saveWordsInFile(wordsFromCSV_Source, splitPerType: true)
 
   #Creamos un unico fichero con todas las palabras
-  saveWords(wordsFromCSV_Source,false)
+  saveWordsInFile(wordsFromCSV_Source, splitPerType: false)
    
 end
 
