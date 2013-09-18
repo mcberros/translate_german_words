@@ -2,34 +2,36 @@ require 'watir-webdriver'
 require 'csv'
 require_relative 'word'
 
-Selenium::WebDriver::Firefox::Binary.path ='/Applications/Firefox.app/Contents/MacOS/firefox'
+Selenium::WebDriver::Firefox::Binary.path = '/Applications/Firefox.app/Contents/MacOS/firefox'
 WORD_LATIN_AMERICA = 'LatAm'
 WRITE_ACCESS_FILE_MODE = 'wb'
 
-def readWordsFromFile(pathCSV_Source)
+def read_words_from_file(pathCSV_Source)
   wordsFromCSV_Source = []
-  CSV.foreach(pathCSV_Source, {skip_blanks: true}) do |rowCSV_Source|
-    addWordInList(wordsFromCSV_Source, rowCSV_Source)
+
+  CSV.foreach(pathCSV_Source, { skip_blanks: true }) do |rowCSV_Source|
+    add_word_in_list(wordsFromCSV_Source, rowCSV_Source)
   end
+
   wordsFromCSV_Source
 end
 
-def addWordInList(wordsFromCSV_Source, rowCSV_Source)
-  wordToSearch = transformLineFileIntoWord(rowCSV_Source)
-  wordsFromCSV_Source.push(wordToSearch) if not wordToSearch.nil?
+def add_word_in_list(wordsFromCSV_Source, rowCSV_Source)
+  wordToSearch = transform_line_file_into_word(rowCSV_Source)
+  wordsFromCSV_Source.push(wordToSearch) if !wordToSearch.nil?
 end
 
-def transformLineFileIntoWord(rowCSV)
-  if validLineFile?(rowCSV)
-    createWord(rowCSV)
+def transform_Line_File_Into_Word(rowCSV)
+  if valid_line_file?(rowCSV)
+    create_word(rowCSV)
   end
 end
 
-def validLineFile?(rowCSV) 
-  not rowCSV[0].nil? and not rowCSV[1].nil? and rowCSV[0].split(',').length >= 1
+def valid_line_file?(rowCSV) 
+  !rowCSV[0].nil? && !rowCSV[1].nil? && rowCSV[0].split(',').length >= 1
 end
 
-def createWord(rowCSV)
+def create_word(rowCSV)
   word = Word.new
   word.wordNotSimplified = rowCSV[0]
   word.sentences = rowCSV[1]
@@ -56,61 +58,72 @@ def createWord(rowCSV)
   word
 end
 
-def saveWordsInFile(allWords, splitPerType = true, typeWord = 'all', fileParams = {pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv'})
-  if not allWords.empty?
+def save_words_in_file(allWords, 
+                       splitPerType = true, 
+                       typeWord = 'all', 
+                       fileParams = { pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv' })
+  if !allWords.empty?
     if typeWord == 'all'
-      saveAllWords(allWords, splitPerType, fileParams)
+      save_all_words(allWords, splitPerType, fileParams)
     elsif Word::TYPE.has_value?(typeWord)
-      saveWordsPerTypeInFile(allWords, typeWord, fileParams)
+      save_words_per_type_in_file(allWords, typeWord, fileParams)
     end
   end
 end
 
-def saveAllWords(allWords, splitPerType = true, fileParams = {pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv'})
-  if not allWords.empty?
+def save_all_words(allWords, 
+                   splitPerType = true, 
+                   fileParams = { pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv' })
+  if !allWords.empty?
     if splitPerType
-      Word::TYPE.each_value { |typeWord| saveWordsPerTypeInFile(allWords, typeWord) }
+      Word::TYPE.each_value { |typeWord| save_words_per_type_in_file(allWords, typeWord) }
     else
       puts "caso splitPerType false"
-      writeWords(allWords, fileParams)
+      write_words(allWords, fileParams)
     end
   end
 end
 
-def saveWordsPerTypeInFile(allWords, typeWord, fileParams = {pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv'})
-  if not allWords.empty?
-    selectedWords = allWords.select { |word| word.type == typeWord}
-    writeWords(selectedWords, typeWord, fileParams) if not selectedWords.empty?
+def save_words_per_type_in_file(allWords, 
+                                typeWord, 
+                                fileParams = { pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv' })
+  if !allWords.empty?
+    selectedWords = allWords.select { |word| word.type == typeWord }
+    write_words(selectedWords, typeWord, fileParams) if !selectedWords.empty?
   end
 end
 
-def writeWords(words, typeWord = 'all', fileParams = {pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv'}) 
-  resultFileName = obtainResultFileName(words, typeWord, fileParams)
+def write_words(words, 
+                typeWord = 'all', 
+                fileParams = { pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv' }) 
+  resultFileName = obtain_result_file_name(words, typeWord, fileParams)
   puts "#{resultFileName}"
-  writeWordsInFile(words, resultFileName)
+  write_words_in_file(words, resultFileName)
 end
 
-def obtainResultFileName(words, typeWord = 'all', fileParams = {pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv'})
+def obtain_result_file_name(words, 
+                            typeWord = 'all', 
+                            fileParams = { pathCSVTranslation: '/Users/mcberros/workspace/translate_german_words/', fileNameTranslation: 'GermanWordsTranslation', sufixFile: '.csv' })
   firstWord = words[0]
   "#{fileParams[:pathCSVTranslation]}#{fileParams[:fileNameTranslation]}_#{firstWord.wordSimplified}_#{typeWord}#{fileParams[:sufixFile]}"
 end
 
-def writeWordsInFile(words, resultFileName)
-  CSV.open(resultFileName, WRITE_ACCESS_FILE_MODE, {col_sep:  ';'}) do |csvFile|
+def write_words_in_file(words, resultFileName)
+  CSV.open(resultFileName, WRITE_ACCESS_FILE_MODE, { col_sep:  ';' }) do |csvFile|
     words.each do |word|
-      csvFile << prepCSVRow(word)
+      csvFile << prepare_CSV_row(word)
     end
   end
 end
 
-def prepCSVRow(word)
+def prepare_CSV_row(word)
   [word.wordNotSimplified, word.translation.join(','), word.type, word.sentences]
 end
 
-def searchAllWords(wordsFromCSV_Source, browser)
+def search_all_words(wordsFromCSV_Source, browser)
   wordsFromCSV_Source.each do |word|
-  word.searchWordInDictionary(browser)
-  puts "#{word.wordSimplified}"
+    word.search_word_in_dictionary(browser)
+    puts "#{word.wordSimplified}"
   end
 end
 
@@ -119,8 +132,8 @@ begin
   # Path where is the file with the list of words.
   pathCSV_Source = '/Users/mcberros/workspace/translate_german_words/GermanWords.csv'
     
-  wordsFromCSV_Source = readWordsFromFile(pathCSV_Source)
-  searchAllWords(wordsFromCSV_Source, browser)
+  wordsFromCSV_Source = read_words_from_file(pathCSV_Source)
+  search_all_words(wordsFromCSV_Source, browser)
 
 ensure
   browser.close
@@ -133,7 +146,7 @@ ensure
   # Los tres campos están separados por ;
 
   #Creamos un fichero por cada tipo
-  saveWordsInFile(wordsFromCSV_Source, splitPerType = true) if not wordsFromCSV_Source.nil?
+  save_words_in_file(wordsFromCSV_Source, splitPerType = true) if !wordsFromCSV_Source.nil?
 
   #Creamos un unico fichero con todas las palabras
   #saveWordsInFile(wordsFromCSV_Source, splitPerType = false)
