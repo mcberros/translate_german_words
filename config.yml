@@ -1,0 +1,12 @@
+:input:
+  :browser: :firefox 
+  :selenium_webdriver_path: '/Applications/Firefox.app/Contents/MacOS/firefox'
+  :dictionary_hostname: 'http://en.pons.eu/dict/search/results/'
+  :path_csv_file: '/Users/mcberros/workspace/translate_german_words/'
+  :file_name: 'GermanWords.csv'
+
+:output:
+  :path_csv_file: '/Users/mcberros/workspace/translate_german_words/'
+  :file_name: 'GermanWordsTranslation'
+  :sufix_file: '.csv'
+
