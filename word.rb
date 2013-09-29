@@ -20,19 +20,20 @@ class Word
   end
 
   def decide_type
-    if not_a_noun_or_not_a_verb?
-      if noun?
-        @word_simplified = to_a.first.split.at(1).strip
-        @type = Word::TYPE.fetch(:noun)
-      elsif reflexive_verb?
-        @word_simplified = @word_simplified.sub(' sich$', '')
-        @type = Word::TYPE.fetch(:verb)
-      else # HACK
-        # Verb without sich. Example: "abbiegen, biegt ab, bog ab, ist abgebogen"
-        @type = Word::TYPE.fetch(:verb)
-      end
-    elsif a_noun_or_a_verb?
-      @type = Word::TYPE.fetch(:other)
+    if a_noun_or_a_verb?
+      treat_noun_or_verb
+    elsif not_a_noun_or_not_a_verb?
+      other_word
+    end
+  end
+
+  def treat_noun_or_verb
+    if noun?
+      treat_noun
+    elsif reflexiv_verb?
+      treat_reflexiv_verb
+    elsif !reflexiv_verb?
+      treat_not_reflexiv_verb
     end
   end
 
@@ -40,8 +41,26 @@ class Word
     @word_simplified.match('^(der|die|das) ')
   end
 
-  def reflexive_verb?
+  def treat_noun
+    @word_simplified = to_a.first.split.at(1).strip
+    @type = Word::TYPE.fetch(:noun)
+  end
+
+  def reflexiv_verb?
     @word_simplified.match(' sich$')
+  end
+
+  def treat_reflexiv_verb
+    @word_simplified = @word_simplified.sub(' sich$', '')
+    @type = Word::TYPE.fetch(:verb)
+  end
+
+  def treat_not_reflexiv_verb
+    @type = Word::TYPE.fetch(:verb)
+  end
+
+  def other_word
+    @type = Word::TYPE.fetch(:other)
   end
 
   def not_a_noun_or_not_a_verb?

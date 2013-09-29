@@ -2,23 +2,20 @@
 
 require_relative 'load_config'
 require_relative 'write_words_in_file'
-require_relative 'read_words_from_file_and_search'
+require_relative 'read_words_from_file'
+require_relative 'search_words_in_dictionary'
 
 begin
   config_reader = LoadConfig.new
   config_reader.read_config
   app_config = config_reader.app_config
-  
-  words_reader = ReadWordsFromFileAndSearch.new(app_config[:input])
-  words_reader.read_and_search
+
+  words_reader = ReadWordsFromFile.new(app_config[:input][:read_file])
+  words_reader.read_from_file
   words = words_reader.words_from_csv_file
 
-  # Para cada palabra vamos a grabar un csv con tres columnas:
-  #   1. Palabra original del csv, es decir, no simplificada.
-  #   2. Traducción de la palabra simplificada al español.
-  #   3. Tipo de palabra.
-  #   4. Frases de ejemplo.
-  #   Los tres campos están separados por ';'.
+  words_searcher = SearchWordsInDictionary.new(app_config[:input][:search_in_dictionary])
+  words_searcher.translate_all_words(words)
 
   writer_words = WriteWordsInFile.new(words, app_config[:output])
 
