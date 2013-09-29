@@ -1,8 +1,9 @@
 # encoding: UTF-8
+require 'csv'
 
 class WriteWordsInFile
 
-  attr_accessor :words, :file_output
+  WRITE_ACCESS_FILE_MODE = 'wb'
 
   def initialize(words, file_output)
     @words = words
@@ -23,8 +24,10 @@ class WriteWordsInFile
     end
   end
 
+  private
+
   def save_words_of_a_type_in_file(type_word)
-                                  
+
     return if @words.empty?
 
     selected_words = select_words_of_a_type(type_word)
@@ -34,8 +37,6 @@ class WriteWordsInFile
 
     write_words_in_file(result_file_name, selected_words)
   end
-
-  private
 
   def select_words_of_a_type(type_word)
     selected_words = @words.select do |word|
