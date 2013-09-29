@@ -3,7 +3,7 @@ translate_german_words
 
 App that translate a list of german words into spanish.
 
-1. We have a list of german words in an input csv file
+1. We have a list of german words in an input csv file.
 Example:
 ab,1. Die Fahrt kostet ab Hamburg 200 Euro. 2. Ab nächster Woche bleibt unser Geschäft samstags geschlossen. 3. Mein Bruder besucht uns ab und zu.
 "abbiegen, biegt ab, bog ab, ist abgebogen",An der nächsten Kreuzung müssen Sie links abbiegen.
@@ -80,7 +80,7 @@ To search the word:
 2. Translation in spanish
 3. Word type: Noun, Verb, Other
 4. Examples sentences for this word
-The fields will be separated with ';'
+The fields will be separated with ';'.
 
 Example:
 ab;desde,a partir de,de... en adelante;OTHER;1. Die Fahrt kostet ab Hamburg 200 Euro. 2. Ab nächster Woche bleibt unser Geschäft samstags geschlossen. 3. Mein Bruder besucht uns ab und zu.
