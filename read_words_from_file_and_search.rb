@@ -4,6 +4,8 @@ require_relative 'word'
 
 class ReadWordsFromFileAndSearch
 
+  WORD_LATIN_AMERICA = 'LatAm'
+
   attr_reader :words_from_csv_file
 
   def initialize(params)
@@ -11,8 +13,8 @@ class ReadWordsFromFileAndSearch
                                  "#{ params[:file_name] }"
     @words_from_csv_file = []
     @dictionary_hostname = params[:dictionary_hostname]
-    @selenium_webdriver_path = params [:selenium_webdriver_path]
-    @browser = params [:browser]
+    Selenium::WebDriver::Firefox::Binary.path = params [:selenium_webdriver_path]
+    @name_browser = params [:browser]
   end
 
   def read_and_search
@@ -37,7 +39,7 @@ class ReadWordsFromFileAndSearch
 
   def transform_line_file_into_word
     return unless valid_line_file?
-    create_word
+    create_word_from_file
   end
 
   def valid_line_file?
@@ -46,8 +48,8 @@ class ReadWordsFromFileAndSearch
     @row_csv_source.first.split(',').length >= 1
   end
 
-  def create_word
-    @word = Word.new(@selenium_webdriver_path, @browser)
+  def create_word_from_file
+    @word = Word.new
     decompose_row_cvs
     @word.simplify
     @word.decide_type
@@ -62,9 +64,63 @@ class ReadWordsFromFileAndSearch
 
   def search_all_words
     return if @words_from_csv_file.nil?
-    @words_from_csv_file.each do |word|
-      word.search_word_in_dictionary
+    @words_from_csv_file.each do |w|
+      search_word_in_dictionary(w)
     end
+  end
+
+  def search_word_in_dictionary(w)
+    @browser = Watir::Browser.new @name_browser
+    @browser.goto w.url
+    explore_page_for_word(w)
+  ensure
+    @browser.close
+  end
+
+  def explore_page_for_word(w)
+    translation_table = @browser.trs(class: 'kne')
+    obtain_translation_list_for_word(translation_table, w)
+    explore_type_of_word(w)
+  end
+
+  def obtain_translation_list_for_word(translation_table, w)
+    translation_table.each do |table_row|
+      explore_table_row_for_translation(table_row, w)
+    end
+  end
+
+  def explore_type_of_word(w)
+    return unless change_word_type?(w)
+    w.type = @browser.h2.element(tag_name: 'acronym').text
+  end
+
+  def change_word_type?(w)
+    @browser.h2s.size == 1 &&
+    w.type == Word::TYPE[:other] &&
+    Word::TYPE.value?(@browser.h2.element(tag_name: 'acronym').text)
+  end
+
+  def explore_table_row_for_translation(table_row, w)
+    maybe_a_headword = table_row.td(class: 'source').strong(class: 'headword')
+    return unless maybe_a_target?(maybe_a_headword, w)
+    maybe_a_target = table_row.td(class: 'target')
+    push_new_translation_for_word(maybe_a_target, w)
+  end
+
+  def maybe_a_target?(maybe_a_headword, w)
+    maybe_a_headword.exists? &&
+    maybe_a_headword.text.strip == w.word_simplified
+  end
+
+  def push_new_translation_for_word(maybe_a_target, w)
+    return unless is_a_translation?(maybe_a_target, w)
+    w.translation = w.translation.push(maybe_a_target.text)
+  end
+
+  def is_a_translation?(maybe_a_target, w)
+    maybe_a_target.exists? &&
+    !w.translation.include?(maybe_a_target.text) &&
+    !maybe_a_target.text.include?(WORD_LATIN_AMERICA)
   end
 
 end
